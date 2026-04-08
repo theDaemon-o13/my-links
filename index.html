@@ -159,6 +159,65 @@ body{
 /* Hide */
 .hidden{display:none!important}
 
+/* Thanks generator */
+.thanks-section{
+  margin:20px 16px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px;
+  position:relative;
+  overflow:hidden;
+}
+.thanks-section::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--gold),var(--emerald),var(--gold));
+}
+.thanks-title{
+  font-size:.95rem;font-weight:700;color:var(--emerald-dark);
+  margin-bottom:4px;display:flex;align-items:center;gap:8px;
+}
+.thanks-subtitle{font-size:.78rem;color:var(--text2);margin-bottom:16px}
+.thanks-row{display:flex;gap:10px}
+.thanks-input{
+  flex:1;padding:13px 16px;
+  border:1.5px solid var(--border);border-radius:12px;
+  font-size:1rem;background:var(--bg);color:var(--text);
+  outline:none;transition:border-color .2s;
+}
+.thanks-input:focus{border-color:var(--emerald)}
+.thanks-input::placeholder{color:#aaa}
+.thanks-gen-btn{
+  flex-shrink:0;
+  background:var(--gold);color:#fff;
+  border:none;border-radius:12px;
+  padding:13px 20px;font-size:.8rem;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.thanks-gen-btn:active{transform:scale(.95);opacity:.85}
+.thanks-result{
+  margin-top:14px;display:none;
+  background:var(--bg);border-radius:12px;
+  padding:14px;
+}
+.thanks-result.show{display:block}
+.thanks-result-link{
+  font-size:.8rem;color:var(--emerald);
+  word-break:break-all;line-height:1.5;
+  margin-bottom:10px;
+}
+.thanks-copy-btn{
+  width:100%;
+  background:var(--emerald);color:#fff;
+  border:none;border-radius:10px;
+  padding:12px;font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.thanks-copy-btn:active{transform:scale(.97)}
+.thanks-copy-btn.copied{background:var(--ok)}
+
 @media(min-width:500px){
   body{max-width:500px;margin:0 auto}
 }
@@ -177,6 +236,20 @@ body{
 </div>
 
 <div id="list"></div>
+
+<!-- Thanks generator -->
+<div class="thanks-section">
+  <div class="thanks-title">🤍 Благодарственное письмо</div>
+  <div class="thanks-subtitle">Введите имя — получите ссылку на открытку благодарности</div>
+  <div class="thanks-row">
+    <input class="thanks-input" id="thanksName" type="text" placeholder="Имя получателя...">
+    <button class="thanks-gen-btn" onclick="generateThanks()">Получить</button>
+  </div>
+  <div class="thanks-result" id="thanksResult">
+    <div class="thanks-result-link" id="thanksLink"></div>
+    <button class="thanks-copy-btn" id="thanksCopyBtn" onclick="copyThanksLink()">Копировать ссылку</button>
+  </div>
+</div>
 
 <div class="toast" id="toast">Ссылка скопирована ✓</div>
 
@@ -233,7 +306,7 @@ function render(filter=''){
           <div class="guest-name">${name}</div>
           <div class="guest-link">${link}</div>
         </div>
-        <button class="copy-btn" onclick="copyLink(this,'${link.replace(/'/g,"\\'")}')">Копировать</button>
+        <button class="copy-btn" onclick="copyLink(this,'${link}')">Копировать</button>
       `;
       section.appendChild(card);
     });
@@ -300,6 +373,35 @@ function showToast(msg){
 document.getElementById('search').addEventListener('input', e => render(e.target.value));
 
 render();
+
+/* ── Thanks link generator (Cyrillic) ── */
+let currentThanksLink = '';
+
+function generateThanks(){
+  const name = document.getElementById('thanksName').value.trim();
+  if(!name){showToast('Введите имя');return}
+  currentThanksLink = `https://${DOMAIN}/thanks.html#${name.replace(/ /g,'+')}`;
+  document.getElementById('thanksLink').textContent = currentThanksLink;
+  document.getElementById('thanksResult').classList.add('show');
+}
+
+function copyThanksLink(){
+  const btn = document.getElementById('thanksCopyBtn');
+  navigator.clipboard.writeText(currentThanksLink).then(()=>{
+    btn.textContent='Скопировано ✓';btn.classList.add('copied');
+    showToast('Ссылка скопирована ✓');
+    setTimeout(()=>{btn.textContent='Копировать ссылку';btn.classList.remove('copied')},1500);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=currentThanksLink;document.body.appendChild(ta);
+    ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    btn.textContent='Скопировано ✓';btn.classList.add('copied');
+    showToast('Ссылка скопирована ✓');
+    setTimeout(()=>{btn.textContent='Копировать ссылку';btn.classList.remove('copied')},1500);
+  });
+}
+
+document.getElementById('thanksName').addEventListener('keydown', e => {if(e.key==='Enter')generateThanks()});
 </script>
 </body>
 </html>
